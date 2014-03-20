@@ -1,4 +1,4 @@
-#!/home/sheefrex/.virtualenvs/.virtualenvs/hoover/bin/python
+#!/root/.virtualenvs/hoover/bin/python
 # EASY-INSTALL-ENTRY-SCRIPT: 'pip==1.1','console_scripts','pip'
 __requires__ = 'pip==1.1'
 import sys
