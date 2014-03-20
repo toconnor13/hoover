@@ -1,4 +1,5 @@
 import os, sys
+from datetime import datetime
 
 path='/home/sheefrex/code/cattalax/site' # ntc
 if path not in sys.path:
@@ -57,6 +58,30 @@ def customer_search(mac_addr):
 		c = Customer.objects.get(mac_addr=g_d[count])
 	return c
 
+def month_search(dt, outlet):
+	try:
+		m= Month.objects.get(vendor=outlet, month_no=dt.month, year=dt.year)
+	except (ValueError, ObjectDoesNotExist):
+		m = Month(year=dt.year, month_no=dt.month, vendor=outlet, no_of_walkbys=0, no_of_bounces=0, no_of_entries=0, avg_duration=0)
+		m.save()
+	return m
+
+def week_search(dt, outlet):
+	try:
+		w= Week.objects.get(vendor=outlet, week_no=dt.isocalender()[1], year=dt.year)
+	except (ValueError, ObjectDoesNotExist):
+		w = Week(year=dt.year, week_no=dt.isocalender()[1], vendor=outlet, no_of_walkbys=0, no_of_bounces=0, no_of_entries=0, avg_duration=0)
+		w.save()
+	return w
+
+def day_search(dt, outlet, week, month):
+	try:
+		d = Day.objects.get(vendor=outlet, over_week=week, over_month=month)
+	except (ValueError, ObjectDoesNotExist):
+		d = Day(year=dt.year, month=dt.month, day=dt.day, datetime=dt, over_week=week, over_month=month, vendor=outlet, no_of_walkbys=0, no_of_bounces=0, no_of_entries=0, avg_duration=0)
+		d.save()
+	return d
+
 for shop_no in shop_list:
 	outlet = Outlet.objects.get(sensor_no=shop_no)
 	captures = captures_in_shop(shop_no, cur)
@@ -65,7 +90,8 @@ for shop_no in shop_list:
 		entry = walkby.split(',')
 		timestamp = int(eval(entry[1]))
 		addr = entry[0]
-		w = Walkby(vendor=shop, time=timestamp)
+		dt = datetime.fromtimestamp(timestamp)
+		w = Walkby(vendor=shop, time=timestamp, datetime=dt)
 		w.save()
 		print "Walkby recorded"
 
