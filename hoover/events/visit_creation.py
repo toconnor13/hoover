@@ -50,13 +50,20 @@ def behaviour_summary(address, cursor):
 	g_d = robjects.r('get_duration(\"' + filename + '\")')
 	return g_d
 
-def customer_search(mac_addr):
-	if len(Customer.objects.filter(mac_addr=eval(addr)))==0:
-		c = Customer(mac_addr=eval(addr))
+def customer_info(mac_addr, outlet):
+	try:
+		c = Customer.objects.get(mac_addr=eval(addr))
+		try:
+			Visit.objects.get(patron=c, vendor=outlet)
+			first_visit=False
+		else:
+			first_visit=True
+	except (ValueError, ObjectDoesNotExist):
+		c = Customer(mac_addr=mac_addr)
 		c.save()
-	else:
-		c = Customer.objects.get(mac_addr=g_d[count])
-	return c
+		first_visit=True
+	customer_info = (c, first_visit)
+	return customer_info
 
 def month_search(dt, outlet):
 	try:
@@ -82,6 +89,23 @@ def day_search(dt, outlet, week, month):
 		d.save()
 	return d
 
+def hour_search(dt, day):
+	try:
+		h = Hour.objects.get(vendor=outlet, day=day, hour=dt.hour)
+	except (ValueError, ObjectDoesNotExist):
+		h = Hour(vendor=outlet, day=day, hour=dt.hour, no_of_walkbys=0, no_of_bounces=0, no_of_entries=0, avg_duration=0)
+		h.save()
+	return h
+
+def time_tuple(dt, outlet):
+	month = month_search(dt, outlet)
+	week = week_search(dt, outlet)
+	day = day_search(dt, outlet, week, month)
+	hour = hour_search(dt, day)
+	times = (month, week, day, hour)
+	return times
+
+
 for shop_no in shop_list:
 	outlet = Outlet.objects.get(sensor_no=shop_no)
 	captures = captures_in_shop(shop_no, cur)
@@ -91,16 +115,22 @@ for shop_no in shop_list:
 		timestamp = int(eval(entry[1]))
 		addr = entry[0]
 		dt = datetime.fromtimestamp(timestamp)
-		w = Walkby(vendor=shop, time=timestamp, datetime=dt)
+		time_tuple = time_tuple(dt, outlet)
+		w = Walkby(vendor=shop, time=timestamp, datetime=dt, month=time_tuple[0], week=time_tuple[1], day=time_tuple[2], hour=time_tuple[3])
 		w.save()
-		print "Walkby recorded"
 
 	for addr in captures:
-		customer = customer_search(addr)
+		customer_info = customer_info(addr)
 		g_d = behaviour_summary(addr, cur)
 		visits = len(g_d)/4
+		timestamp=int(g_d[count+1])
+		dt = datetime.fromtimestamp(timestamp)
+		time_tuple = time_tuple(dt, outlet)
 		count = 0
 		for i in range(visits):
-			v = Visit(patron=customer, vendor=outlet, arrival_time=int(g_d[count+1]), duration=int(g_d[count+2]))
+			v = Visit(patron=customer_info[0], vendor=outlet, duration=int(g_d[count+2]), first_visit=customer_info[1], month=time_tuple[0], week=time_tuple[1], day=time_tuple[2], hour=time_tuple[3],time=timestamp, datetime=dt)
 			v.save()
 			count += 4
+
+
+
