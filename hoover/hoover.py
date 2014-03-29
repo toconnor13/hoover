@@ -6,8 +6,10 @@ class Echo(protocol.Protocol):
 		f = open('attendance.csv', 'a')
 		f.write(data)
 		print "Some data received"
+		os.system("Data received `date \"+%d-%m %I-%M\"` >> datalog.txt")
 		if os.stat('attendance.csv').st_size > 40000:
-			os.system("mysqlimport --ignore-lines=0 --fields-terminated-by=, --columns='timestamp,rssi,id,sensor_id' --local -u root -p'the power to do what is right' cattalax ./attendance.csv")
+			os.system("`date \"+%d-%m %I-%M\" >> datalog.txt")
+			os.system("mysqlimport --ignore-lines=0 --fields-terminated-by=, --columns='timestamp,rssi,id,sensor_id' --local -u root -p'the power to do what is right' cattalax ./attendance.csv >> datalog.txt")
 			print "File rolled over."
 			os.remove('attendance.csv')
 
