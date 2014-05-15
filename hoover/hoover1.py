@@ -9,10 +9,10 @@ class Echo(protocol.Protocol):
 		data2 = data.split('\n')
 		for line in data2:
 			details = line.split(',')
-			if details[2]=='BSSID:ff:ff:ff:ff:ff:ff':
-				oc.system("echo Broadcast message received >> datalog2.txt")
-				continue
 			if len(details)>3:
+				if 'BSSID' in details[2]:
+					os.system("echo Broadcast message received >> datalog2.txt")
+					continue
 				os.system("echo "+line+" | nc 10.24.18.1 4481")
 				if int(details[1])>-70 and details[2] not in addr_log:
 					os.system("echo " + details[0] + ","+details[2] + " | nc 10.24.18.1 4483")
