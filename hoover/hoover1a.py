@@ -3,7 +3,7 @@ import os
 
 class Echo(protocol.Protocol):
 	def dataReceived(self, data):
-		f = open('walkby_log1a.csv', 'a')
+		f = open('/root/walkby_log1a.csv', 'a')
 		f.write(data)
 
 class EchoFactory(protocol.Factory):
@@ -11,5 +11,5 @@ class EchoFactory(protocol.Factory):
 		return Echo()
 
 
-reactor.listenTCP(4483, EchoFactory())
+reactor.listenTCP(4483, EchoFactory(), interface='10.24.18.26')
 reactor.run()
